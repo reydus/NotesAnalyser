@@ -45,10 +45,6 @@ class graphing:
         self.x = np.linspace(-self.timespan,0, num=(int(self.timespan*self.fs)))
         self.ydata = self.x[:] * 0 
 
-        self.block = self.inputStream.read(self.chunk)
-        self.block = np.reshape(self.block[0],(self.chunk,))
-        self.ydata[-(self.chunk+1):-1] = self.block
-
         self._update()
 
     def _update(self):
@@ -67,16 +63,10 @@ class graphing:
         self.fftdata = np.real(self.fftdata[:len(self.fftdata)//2]).flatten() # perform FFT on it, only include the first half of the real part.
         self.fftdata = abs(self.fftdata)
         self.h1.setData(self.fftdata)
-        '''
-        try:
-            if max(self.fftdata) > self.maxfft:
-                self.maxfft = max(self.fftdata)
-
-        except AttributeError:
-            self.maxfft = max(self.fftdata)
-        '''
         self.maxfft = max(self.fftdata)
         self.fourierPlot.setYRange(0,self.maxfft, padding=0)
+
+        
         # FPS counter
         now = time.time()
         dt = (now-self.lastupdate)
