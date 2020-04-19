@@ -11,13 +11,18 @@ class graphing:
         # Initialise Qt window/app
         self.app = QtGui.QApplication([])
         self.win = pg.GraphicsWindow(title="Live microphone input plotting and fourier transform")
-        self.win.resize(1000,600)
+        pg.setConfigOption('background', 'w')
+        #self.win = QtGui.QWidget()
+
+       # self.win.resize(1000,600)
         self.counter = 0
         self.fps = 0.
         self.lastupdate = time.time()
         self.label = QtGui.QLabel()
         self.win.setLayout(QtGui.QVBoxLayout())
         self.win.layout().addWidget(self.label)
+        self.label.setStyleSheet('color: white')
+
 
         # Initialise audio stream
         self.chunk = 32 
@@ -25,18 +30,8 @@ class graphing:
         self.inputStream = sd.Stream(blocksize=self.chunk,samplerate=self.fs,channels=1)
         self.inputStream.start()
 
-
-        # Fourier transform (Frequency domain) plot
-        self.fourierPlot = self.win.addPlot()
-        self.h1 = self.fourierPlot.plot(pen="y")
-        self.fourierPlot.setLabel("bottom", text="Frequency (Hz)")
-        self.fourierPlot.setLabel("left", text="Magnitude")
-        self.fourierPlot.setXRange(0,self.fs//2, padding=0)
-        self.fourierPlot.autoRange(padding=0)
-        self.fftspan = 1.0 #interval of time for FFT computation
-
         #  Waveform (Time domain) plot
-        self.wavePlot = self.win.addPlot()
+        self.wavePlot = self.win.addPlot(row=1,col=1)
         self.wavePlot.setXRange(-4.0,0, padding=0)
         self.wavePlot.setLabel("bottom", text="Time-to-current (s)")
         self.wavePlot.setLabel("left", text="Amplitude")
@@ -44,6 +39,21 @@ class graphing:
         self.timespan = 4.0
         self.x = np.linspace(-self.timespan,0, num=(int(self.timespan*self.fs)))
         self.ydata = self.x[:] * 0 
+
+
+        # Fourier transform (Frequency domain) plot
+        self.fourierPlot = self.win.addPlot(row=2,col=1)
+        self.h1 = self.fourierPlot.plot(pen="y")
+        self.fourierPlot.setLabel("bottom", text="Frequency (Hz)")
+        self.fourierPlot.setLabel("left", text="Magnitude")
+        self.fourierPlot.setXRange(0,self.fs//2, padding=0)
+        self.fourierPlot.autoRange(padding=0)
+        self.fftspan = 1.0 #interval of time for FFT computation
+
+        self.freqLabel = QtGui.QLabel()
+        self.freqLabel.setText("Test label")
+        self.win.layout().addWidget(self.freqLabel)
+        self.freqLabel.setStyleSheet('color: white')
 
         self._update()
 
@@ -63,10 +73,11 @@ class graphing:
         self.fftdata = np.real(self.fftdata[:len(self.fftdata)//2]).flatten() # perform FFT on it, only include the first half of the real part.
         self.fftdata = abs(self.fftdata)
         self.h1.setData(self.fftdata)
+        #self.h3.setData(self.fftdata)
         self.maxfft = max(self.fftdata)
         self.fourierPlot.setYRange(0,self.maxfft, padding=0)
 
-        
+
         # FPS counter
         now = time.time()
         dt = (now-self.lastupdate)
